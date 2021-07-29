@@ -78,14 +78,18 @@ public class WorksheetMain {
 		String customerId = "";
 		String uid = "";
 		String tempUid = "";
-
+		String customerEmail;
+		
 		for (int i = 4; i <= customerLastRow; i++) {
-			String customerEmail = customerSheet.getRow(i).getCell(3).getStringCellValue();
 
-			uid = customerSheet.getRow(i).getCell(1).toString();
-
-			if (customerEmail != "") {
+			if (customerSheet.getRow(i).getCell(3).getStringCellValue()!="") {
+				
+				customerEmail = customerSheet.getRow(i).getCell(3).toString();
+				uid = customerSheet.getRow(i).getCell(1).toString();
+				
 				for (int j = 1; j <= row; j++) {
+					
+					customerId = "";
 
 					if (("abc" + customerEmail)
 							.equalsIgnoreCase(exportSheet.getRow(j).getCell(0).getStringCellValue())) {
@@ -99,73 +103,88 @@ public class WorksheetMain {
 								if (uid.equals(tempUid)) {
 									addressSheet.getRow(k).createCell(1);
 									addressSheet.getRow(k).getCell(1).setCellValue(customerId);
-									// break;
+									System.out.println("Inserting CustomerId In Address Sheet: "+customerId);
+									
 								}
 
-							} else {
-								addressSheet.removeRow(addressSheet.getRow(i));
-								
-						        
-							}
+							} 
 						}
-					}
-
-				}
-
-				System.out.println(customerId);
-				cell = customerSheet.getRow(i).createCell(1);
-
-				if (customerId != "") {
-					try {
+						
+						cell = customerSheet.getRow(i).createCell(1);
+	
 						cell.setCellValue(customerId);
-						System.out.println("Inserted");
-					} catch (Exception e) {
-						e.printStackTrace();
+						System.out.println("Inserting CustomerId In Customer Sheet: "+customerId);
+						break;
+						
+						}
+						
+						
+						
 					}
-				} else {
-					customerSheet.removeRow(customerSheet.getRow(i));
-				}
 
-			} else {
-				customerSheet.removeRow(customerSheet.getRow(i));
-			}
+				}
 
 		}
 
-		for (int i = 4; i <= addressSheet.getLastRowNum(); i++) {
-			if (addressSheet.getRow(i).getCell(1).getCellType() == CellType.NUMERIC) {
-				//addressSheet.removeRow(addressSheet.getRow(i));
-				addressSheet.shiftRows(addressSheet.getRow(i).getRowNum() + 1, addressSheet.getLastRowNum() + 1, -1);
+	//Deleting rows of Customer which does not have mapping in csv/Email
+		for (int i = 4; i <= customerSheet.getLastRowNum(); i++) {
+			try
+			{
+			if (customerSheet.getRow(i).getCell(1).getCellType() == CellType.NUMERIC 
+					|| customerSheet.getRow(i).getCell(1).toString() == "" 
+					|| customerSheet.getRow(i).getCell(1).getCellType() == CellType.BLANK)
+			{
+				System.out.println("Removing records which does not have id mapping/Email");
+				customerSheet.shiftRows(customerSheet.getRow(i).getRowNum() + 1, customerSheet.getLastRowNum() + 1, -1);
 				i--;
 			}
+			}
+			catch (NullPointerException e)
+			{
+				System.out.println("Null Pointer at row"+i);
+				e.printStackTrace();
+			}
 		}
 
-		// customerFile.close();
-		try {
-			FileOutputStream outFile = new FileOutputStream(
-					new File(".\\UpdatedFiles\\newCustomer.xlsx"));
-			// C:\\Users\\amaljanan.k\\Downloads\\Excel file\\newCustomer.xlsx
-			workbookCustomer.write(outFile);
-			outFile.close();
-		} catch (Exception e) {
-			System.out.println(e);
-
+	//Deleting rows of Address which  does not have corresponding entry in Customer
+	for(int i = 4;i<=addressSheet.getLastRowNum();i++)
+	{
+		if (addressSheet.getRow(i).getCell(1).getCellType() == CellType.NUMERIC )
+		{
+			System.out.println("Removing records whic does not have corresponding value in customer");
+			addressSheet.shiftRows(addressSheet.getRow(i).getRowNum() + 1, addressSheet.getLastRowNum() + 1, -1);
+			i--;
 		}
-
-		try {
-			FileOutputStream outFileAddress = new FileOutputStream(
-					new File(".\\UpdatedFiles\\newAddress.xlsx"));
-			workbookAddress.write(outFileAddress);
-			outFileAddress.close();
-			System.out.println("Finished");
-		} catch (Exception e) {
-			System.out.println(e);
-
-		}
-
-		long end = System.currentTimeMillis();
-		long elapsedTime = end - start;
-
-		System.out.println("Total time taken: " + elapsedTime);
 	}
-}
+
+	customerFile.close();
+	try
+	{
+		FileOutputStream outFile = new FileOutputStream(new File(".\\UpdatedFiles\\newCustomer.xlsx"));
+		workbookCustomer.write(outFile);
+		outFile.close();
+	}catch(
+	Exception e)
+	{
+		System.out.println(e);
+
+	}
+
+	try
+	{
+		FileOutputStream outFileAddress = new FileOutputStream(new File(".\\UpdatedFiles\\newAddress.xlsx"));
+		workbookAddress.write(outFileAddress);
+		outFileAddress.close();
+		System.out.println("Finished");
+	}catch(
+	Exception e)
+	{
+		System.out.println(e);
+
+	}
+
+	long end = System.currentTimeMillis();
+	long elapsedTime = end - start;
+
+	System.out.println("Total time taken: "+elapsedTime);
+}}
