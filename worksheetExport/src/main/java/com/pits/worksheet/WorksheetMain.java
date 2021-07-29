@@ -20,7 +20,7 @@ public class WorksheetMain {
 
 	public static void main(String[] args) throws IOException {
 
-		long start = System.currentTimeMillis();
+		
 		
 		String exportSheetName = null;
 		String customerSheetName = null;
@@ -37,7 +37,8 @@ public class WorksheetMain {
 		System.out.println("Enter Address Sheet name with Extension:");
 		addressSheetName = sc.nextLine();
 		
-
+		long start = System.currentTimeMillis();
+		
 		FileInputStream exportfile = new FileInputStream(
 				new File(".\\source\\"+exportSheetName));
 
