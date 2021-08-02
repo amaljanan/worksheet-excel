@@ -17,6 +17,8 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -54,13 +56,21 @@ public class WorksheetMain {
 		XSSFSheet addressSheet = workbookAddress.getSheet("Address");
 
 		int customerLastRow = customerSheet.getLastRowNum();
+		
+		XSSFWorkbook workbookDeletedCustomer = new XSSFWorkbook();
+		XSSFSheet deletedCustomerSheet = workbookDeletedCustomer.createSheet("Deleted Customer");
+		
+		XSSFWorkbook workbookDeletedAddress = new XSSFWorkbook();
+		XSSFSheet deletedAddressSheet = workbookDeletedAddress.createSheet("Deleted Address");
+		
 
 		Cell cell = null;
 		String customerId = "";
 		String uid = "";
 		String tempUid = "";
 		String customerEmail;
-
+		
+	
 		for (int i = 4; i <= customerLastRow; i++) {
 
 			if (customerSheet.getRow(i).getCell(3).getStringCellValue() != "") {
@@ -93,6 +103,8 @@ public class WorksheetMain {
 
 						cell.setCellValue(customerId);
 						System.out.println("Inserting CustomerId In Customer Sheet: " + customerId);
+						//Changing  customer type to guest
+						customerSheet.getRow(i).createCell(7).setCellValue("Guest");
 						break;
 
 					}
@@ -102,7 +114,8 @@ public class WorksheetMain {
 			}
 
 		}
-
+	int insertRow = 0;	
+	Row deleteRow;
 		// Deleting rows of Customer which does not have mapping in csv/Email
 		for (int i = 4; i <= customerSheet.getLastRowNum(); i++) {
 			try {
@@ -110,6 +123,22 @@ public class WorksheetMain {
 						|| customerSheet.getRow(i).getCell(1).toString() == ""
 						|| customerSheet.getRow(i).getCell(1).getCellType() == CellType.BLANK) {
 					System.out.println("Removing records which does not have id mapping/Email");
+					deleteRow = deletedCustomerSheet.createRow(insertRow++);
+					for(int j=0;j<=customerSheet.getRow(4).getLastCellNum();j++)
+					{
+						Cell mycell;
+						mycell = deleteRow.createCell(j,CellType.STRING);
+						if(customerSheet.getRow(i).getCell(j)!=null)
+						{
+						//System.out.println(customerSheet.getRow(i).getCell(j).toString());
+						mycell.setCellValue(customerSheet.getRow(i).getCell(j).toString());
+						}
+						if(customerSheet.getRow(i).getCell(3)==null || customerSheet.getRow(i).getCell(3).getCellType() == CellType.BLANK)
+							deleteRow.createCell(11).setCellValue("Reason for deletion : No Email Id Present for this record");
+						else
+							deleteRow.createCell(11).setCellValue("Reason for deletion : No Cutomer Id mapping in Export Sheet");
+					}
+				
 					customerSheet.shiftRows(customerSheet.getRow(i).getRowNum() + 1, customerSheet.getLastRowNum() + 1,
 							-1);
 					i--;
@@ -120,10 +149,26 @@ public class WorksheetMain {
 			}
 		}
 
+		insertRow = 0;
 		// Deleting rows of Address which does not have corresponding entry in Customer
 		for (int i = 4; i <= addressSheet.getLastRowNum(); i++) {
 			if (addressSheet.getRow(i).getCell(1).getCellType() == CellType.NUMERIC) {
-				System.out.println("Removing records whic does not have corresponding value in customer");
+				System.out.println("Removing records which does not have corresponding value in customer");
+				deleteRow = deletedAddressSheet.createRow(insertRow++);
+				for(int j=0;j<=addressSheet.getRow(4).getLastCellNum();j++)
+				{
+					Cell mycell;
+					mycell = deleteRow.createCell(j,CellType.STRING);
+					if(addressSheet.getRow(i).getCell(j)!=null)
+					{
+					//System.out.println(customerSheet.getRow(i).getCell(j).toString());
+					mycell.setCellValue(addressSheet.getRow(i).getCell(j).toString());
+					}
+					if(addressSheet.getRow(i).getCell(1)==null)
+						deleteRow.createCell(15).setCellValue("Reason for deletion: Customer Id is not present ");
+					else
+						deleteRow.createCell(15).setCellValue("Reason for deletion: Corresponding Customer is not present in customer sheet ");
+				}
 				addressSheet.shiftRows(addressSheet.getRow(i).getRowNum() + 1, addressSheet.getLastRowNum() + 1, -1);
 				i--;
 			}
@@ -134,6 +179,11 @@ public class WorksheetMain {
 			FileOutputStream outFile = new FileOutputStream(new File(".\\UpdatedFiles\\newCustomer.xlsx"));
 			workbookCustomer.write(outFile);
 			outFile.close();
+			
+			FileOutputStream deleteCustomerOutFile = new FileOutputStream(new File(".\\UpdatedFiles\\deletedCustomer.xlsx"));
+			workbookDeletedCustomer.write(deleteCustomerOutFile);
+			deleteCustomerOutFile.close();
+			
 		} catch (Exception e) {
 			System.out.println(e);
 
@@ -143,6 +193,11 @@ public class WorksheetMain {
 			FileOutputStream outFileAddress = new FileOutputStream(new File(".\\UpdatedFiles\\newAddress.xlsx"));
 			workbookAddress.write(outFileAddress);
 			outFileAddress.close();
+			
+			FileOutputStream deleteAddressOutFile = new FileOutputStream(new File(".\\UpdatedFiles\\deletedAddress.xlsx"));
+			workbookDeletedAddress.write(deleteAddressOutFile);
+			deleteAddressOutFile.close();
+			
 			System.out.println("Finished");
 		} catch (Exception e) {
 			System.out.println(e);
