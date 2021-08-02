@@ -9,60 +9,91 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
 import java.util.List;
-
+import java.util.Scanner;
 
 public class Main {
 
   public static void main(String[] args) {
 
-    long start = System.currentTimeMillis();
-
     try {
-      FileInputStream customerFileInputStream =
-          new FileInputStream(
-              "/Users/pituser/Documents/Waltec Project/20210608_PH_FR_Template_Customer.xlsx");
 
-      CSVParser exportCSVParser =
-          new CSVParser(
-              new FileReader("/Users/pituser/Documents/Waltec Project/Export.csv"),
-              CSVFormat.DEFAULT);
-      List<CSVRecord> list = exportCSVParser.getRecords();
-      exportCSVParser.close();
+      Scanner scanner = new Scanner(System.in);
 
-      XSSFWorkbook customerWorkbook = new XSSFWorkbook(customerFileInputStream);
+      XSSFWorkbook customerWorkbook = importCustomerWorkBook(scanner);
+
+      XSSFWorkbook addressWorkbook = importAddressWorkBook(scanner);
+
+      List<CSVRecord> list = importExportCSVFile(scanner);
+
+      long start = System.currentTimeMillis();
 
       mappingCustomerWorkbook(customerWorkbook, list);
 
-      FileInputStream addressFileInputStream =
-          new FileInputStream(
-              "/Users/pituser/Documents/Waltec Project/20210608_ PH_FR_Template_Address.xlsx");
-
-      XSSFWorkbook addressWorkbook = new XSSFWorkbook(addressFileInputStream);
-
       mappingAddressWorkbook(customerWorkbook, addressWorkbook);
 
-      FileOutputStream customerFileOutputStream =
-          new FileOutputStream(
-              "/Users/pituser/Documents/Waltec Project/Result/Customer.xlsx");
-      customerWorkbook.write(customerFileOutputStream);
+      exportingFinalCustomerWorkbook(customerWorkbook);
 
-      FileOutputStream addressFileOutputStream =
-          new FileOutputStream(
-              "/Users/pituser/Documents/Waltec Project/Result/Address.xlsx");
-      addressWorkbook.write(addressFileOutputStream);
-
-      addressFileOutputStream.close();
-      customerFileOutputStream.close();
-
-      customerFileInputStream.close();
+      exportingFinalAddressWorkbook(addressWorkbook);
 
       long end = System.currentTimeMillis();
 
-      System.out.println("Time took = "+(end-start));
+      System.out.println("Time took = " + (end - start));
 
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private static void exportingFinalAddressWorkbook(XSSFWorkbook addressWorkbook) throws IOException {
+
+    FileOutputStream addressFileOutputStream =
+            new FileOutputStream(new File("./Final/Address.xlsx"));
+    addressWorkbook.write(addressFileOutputStream);
+
+    addressFileOutputStream.close();
+  }
+
+  private static void exportingFinalCustomerWorkbook(XSSFWorkbook customerWorkbook) throws IOException {
+    FileOutputStream customerFileOutputStream =
+            new FileOutputStream(new File("./Final/Customer.xlsx"));
+    customerWorkbook.write(customerFileOutputStream);
+    customerFileOutputStream.close();
+  }
+
+  private static List<CSVRecord> importExportCSVFile(Scanner scanner) throws IOException {
+
+    String exportSheetName = null;
+
+    System.out.println("Enter Export Sheet Name with extension:");
+    exportSheetName = scanner.nextLine();
+
+    CSVParser exportCSVParser =
+        new CSVParser(new FileReader(new File("./Source/" + exportSheetName)), CSVFormat.DEFAULT);
+   // exportCSVParser.close();
+    return exportCSVParser.getRecords();
+  }
+
+  private static XSSFWorkbook importAddressWorkBook(@org.jetbrains.annotations.NotNull Scanner scanner) throws IOException {
+    String addressSheetName = null;
+    System.out.println("Enter Address Sheet name with Extension:");
+    addressSheetName = scanner.nextLine();
+
+    FileInputStream addressFileInputStream =
+        new FileInputStream(new File("./Source/" + addressSheetName));
+   // addressFileInputStream.close();
+    return new XSSFWorkbook(addressFileInputStream);
+  }
+
+  private static XSSFWorkbook importCustomerWorkBook(Scanner scanner) throws IOException {
+    String customerSheetName = null;
+    System.out.println("Enter Customer Sheet name with extension:");
+    customerSheetName = scanner.nextLine();
+
+    FileInputStream customerFileInputStream =
+        new FileInputStream(new File("./Source/" + customerSheetName));
+    //customerFileInputStream.close();
+
+    return new XSSFWorkbook(customerFileInputStream);
   }
 
   private static void mappingAddressWorkbook(
@@ -103,15 +134,13 @@ public class Main {
     for (int j = 0; j <= customerSheet.getLastRowNum(); j++) {
 
       if (null != customerSheet.getRow(j).getCell(1)
-              && customerSheet.getRow(j).getCell(1).toString().contains("##")) {
+          && customerSheet.getRow(j).getCell(1).toString().contains("##")) {
 
         String[] customerSheetId = customerSheet.getRow(j).getCell(1).toString().split("##");
         String id = customerSheetId[1];
         customerSheet.getRow(j).createCell(1).setCellValue(id);
       }
-
     }
-
   }
 
   private static void mappingCustomerWorkbook(XSSFWorkbook customerWorkbook, List<CSVRecord> list) {
@@ -129,10 +158,10 @@ public class Main {
               .getCell(3)
               .getStringCellValue()
               .equalsIgnoreCase(record.get(0).substring(3))) {
-          /*  System.out.println(
-                "Email =" + customerSheet.getRow(i).getCell(3) + " UID =" + record.get(1));*/
+            /*  System.out.println(
+            "Email =" + customerSheet.getRow(i).getCell(3) + " UID =" + record.get(1));*/
             String uid = StringUtils.stripEnd(customerSheet.getRow(i).getCell(1).toString(), ".0");
-           // System.out.println("Uid = " + uid);
+            // System.out.println("Uid = " + uid);
             customerSheet
                 .getRow(i)
                 .createCell(1)
