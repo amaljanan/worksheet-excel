@@ -2,18 +2,23 @@ package com.pits.worksheet;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellCopyPolicy;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -23,7 +28,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class WorksheetMain {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 
 		XSSFWorkbook workbookCustomer = null;
 		XSSFSheet customerSheet;
@@ -34,7 +39,8 @@ public class WorksheetMain {
 		List<CSVRecord> list = null;
 
 		Scanner sc = new Scanner(System.in);
-
+		
+		
 		
 
 		try {
@@ -50,7 +56,8 @@ public class WorksheetMain {
 
 		customerSheet = workbookCustomer.getSheet("Customer");
 		addressSheet = workbookAddress.getSheet("Address");
-
+		
+		
 		XSSFWorkbook workbookDeletedCustomer = new XSSFWorkbook();
 		XSSFSheet deletedCustomerSheet = workbookDeletedCustomer.createSheet("Deleted Customer");
 
@@ -145,6 +152,11 @@ public class WorksheetMain {
 
 			workbookAddress.close();
 			workbookDeletedAddress.close();
+			
+			customerToCsv(customerSheet);
+			
+			addressToCsv(addressSheet);
+			
 
 			System.out.println("Finished");
 		} catch (Exception e) {
@@ -156,6 +168,11 @@ public class WorksheetMain {
 		long elapsedTime = end - start;
 
 		System.out.println("Total time taken: " + elapsedTime);
+		
+		//System.out.println("Do You want to convert this to impex");
+		//String inputFromUser = sc.nextLine();
+		
+		
 
 	}
 
@@ -258,6 +275,86 @@ public class WorksheetMain {
 				CSVFormat.DEFAULT);
 		// exportCSVParser.close();
 		return exportCSVParser.getRecords();
+	}
+	
+	
+	
+	
+	private static void customerToCsv(XSSFSheet customerSheet) throws Exception
+	{
+
+
+		FileOutputStream sampleCsv = new FileOutputStream(new File(".\\UpdatedFiles\\CustomerImpex.impex"));
+		CSVPrinter csvPrinter = null; 
+		csvPrinter = new CSVPrinter(new OutputStreamWriter(sampleCsv), CSVFormat.DEFAULT.withDelimiter(';').withTrim());
+		
+		for(int i=0;i<=9;i++)
+		{
+			if(customerSheet.getRow(2).getCell(i)!=null)
+			csvPrinter.print(customerSheet.getRow(2).getCell(i).toString());
+		}
+		
+        for(int i=4;i<=customerSheet.getLastRowNum();i++) {                
+        	
+        		csvPrinter.println();
+        		//csvPrinter.print(null);
+        	for (int j =0;j<=9;j++) {
+            	
+        		if(customerSheet.getRow(i).getCell(j)!=null)
+        		{
+        			if(customerSheet.getRow(i).getCell(j).getCellType()==CellType.NUMERIC)
+        				csvPrinter.print(customerSheet.getRow(i).getCell(j).toString().split("\\.")[0]);
+        			else
+        				csvPrinter.print(customerSheet.getRow(i).getCell(j).toString());
+        		}
+        		else
+        			csvPrinter.print(null);
+            	
+            }                   
+           
+        }   
+		
+		csvPrinter.close();
+
+	}
+	
+	
+	private static void addressToCsv(XSSFSheet addressSheet) throws Exception
+	{
+
+
+		FileOutputStream sampleCsv = new FileOutputStream(new File(".\\UpdatedFiles\\AddressImpex.impex"));
+		CSVPrinter csvPrinter = null; 
+		csvPrinter = new CSVPrinter(new OutputStreamWriter(sampleCsv), CSVFormat.DEFAULT.withDelimiter(';').withTrim());
+		
+		for(int i=0;i<=13;i++)
+		{
+			if(addressSheet.getRow(2).getCell(i)!=null)
+			csvPrinter.print(addressSheet.getRow(2).getCell(i).toString());
+		}
+		
+        for(int i=4;i<=addressSheet.getLastRowNum();i++) {                
+        	
+        		csvPrinter.println();
+        		//csvPrinter.print(null);
+        	for (int j =0;j<=13;j++) {
+            	
+        		if(addressSheet.getRow(i).getCell(j)!=null)
+        		{
+        			if(addressSheet.getRow(i).getCell(j).getCellType()==CellType.NUMERIC)
+        				csvPrinter.print(addressSheet.getRow(i).getCell(j).toString().split("\\.")[0]);
+        			else
+        				csvPrinter.print(addressSheet.getRow(i).getCell(j).toString());
+        		}
+        		else
+        			csvPrinter.print(null);
+            	
+            }                   
+           
+        }   
+		
+		csvPrinter.close();
+
 	}
 
 }
