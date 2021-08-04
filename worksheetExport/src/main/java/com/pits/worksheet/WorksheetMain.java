@@ -15,6 +15,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.csv.QuoteMode;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellCopyPolicy;
 import org.apache.poi.ss.usermodel.CellType;
@@ -27,9 +28,20 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 public class WorksheetMain {
+	
+	static int customerValueRow = 4, addressValueRow = 4;
 
 	public static void main(String[] args) throws Exception {
 
+
+		Cell cell = null;
+		String customerId = "";
+		String uid = "";
+		String tempUid = "";
+		String customerEmail;
+		int customerCellCount = 9, addressCellCount = 13;
+		int customerHeader = 2, addressHeader = 2;
+		
 		XSSFWorkbook workbookCustomer = null;
 		XSSFSheet customerSheet;
 
@@ -39,9 +51,7 @@ public class WorksheetMain {
 		List<CSVRecord> list = null;
 
 		Scanner sc = new Scanner(System.in);
-		
-		
-		
+
 
 		try {
 			list = importExportCSVFile(sc);
@@ -66,15 +76,10 @@ public class WorksheetMain {
 
 		long start = System.currentTimeMillis();
 		
-		Cell cell = null;
-		String customerId = "";
-		String uid = "";
-		String tempUid = "";
-		String customerEmail;
 		
 		//XSSFRow deleteRow;
 		
-		for (int i = 4; i <= customerSheet.getLastRowNum(); i++) {
+		for (int i = customerValueRow; i <= customerSheet.getLastRowNum(); i++) {
 
 			if (customerSheet.getRow(i).getCell(3).getStringCellValue() != "") {
 
@@ -87,7 +92,7 @@ public class WorksheetMain {
 
 					if (("abc" + customerEmail).equalsIgnoreCase(record.get(0))) {
 						customerId = record.get(1);
-						for (int k = 4; k <= addressSheet.getLastRowNum(); k++) {
+						for (int k = addressValueRow; k <= addressSheet.getLastRowNum(); k++) {
 
 							if (addressSheet.getRow(k).getCell(1).toString() != "") {
 
@@ -153,9 +158,9 @@ public class WorksheetMain {
 			workbookAddress.close();
 			workbookDeletedAddress.close();
 			
-			customerToCsv(customerSheet);
+			customerToImpex(customerSheet,customerCellCount,customerHeader);
 			
-			addressToCsv(addressSheet);
+			addressToImpex(addressSheet,addressCellCount,addressHeader);
 			
 
 			System.out.println("Finished");
@@ -177,29 +182,26 @@ public class WorksheetMain {
 	}
 
 	private static XSSFSheet deleteAddressRow(XSSFSheet addressSheet, XSSFSheet deletedAddressSheet) {
-		int insertRow = 0;
+		int insertRow = 1;
 		XSSFRow deleteRow;
+		
+		deleteRow = deletedAddressSheet.createRow(0);
+		deleteRow.createCell(0).setCellValue("uid");
+		deleteRow.createCell(1).setCellValue("Reason for deletion");
+		
 		// Deleting rows of Address which does not have corresponding entry in Customer
-		for (int i = 4; i <= addressSheet.getLastRowNum(); i++) {
+		for (int i = addressValueRow; i <= addressSheet.getLastRowNum(); i++) {
 			if (addressSheet.getRow(i).getCell(1).getCellType() == CellType.NUMERIC) {
 				System.out.println("Removing records which does not have corresponding value in customer");
 				
 				deleteRow = deletedAddressSheet.createRow(insertRow++);
 				
-				CellCopyPolicy policy = new CellCopyPolicy();
-			    policy.setCopyCellStyle(false); 
-			    try
-			    {
-			    deleteRow.copyRowFrom(addressSheet.getRow(i), policy);
-			    }
-			    catch (Exception e) {
-			    	System.out.println("Exception:"+addressSheet.getRow(i).getCell(1).toString());
-				}
+				deleteRow.createCell(0).setCellValue(addressSheet.getRow(i).getCell(1).getNumericCellValue());
 				
 				if (addressSheet.getRow(i).getCell(1) == null || addressSheet.getRow(i).getCell(1).getCellType() == CellType.BLANK)
-					deleteRow.createCell(15).setCellValue("Reason for deletion: Customer Id is not present ");
+					deleteRow.createCell(1).setCellValue("Customer Id is not present ");
 				else
-					deleteRow.createCell(15).setCellValue("Reason for deletion: Corresponding Customer is not present in customer sheet ");
+					deleteRow.createCell(1).setCellValue("Corresponding Customer is not present in customer sheet ");
 			
 				addressSheet.shiftRows(addressSheet.getRow(i).getRowNum() + 1, addressSheet.getLastRowNum() + 1, -1);
 				i--;
@@ -210,10 +212,16 @@ public class WorksheetMain {
 	}
 
 	private static XSSFSheet deleteCustomerRow(XSSFSheet customerSheet, XSSFSheet deletedCustomerSheet) {
-		int insertRow = 0;
+		int insertRow = 1;
 		XSSFRow deleteRow;
+		
+		deleteRow = deletedCustomerSheet.createRow(0);
+		deleteRow.createCell(0).setCellValue("uid");
+		deleteRow.createCell(1).setCellValue("email");
+		deleteRow.createCell(2).setCellValue("Reason for deletion");
+		
 		// Deleting rows of Customer which does not have mapping in csv/Email
-		for (int i = 4; i <= customerSheet.getLastRowNum(); i++) {
+		for (int i = customerValueRow; i <= customerSheet.getLastRowNum(); i++) {
 			try {
 				if (customerSheet.getRow(i).getCell(1).getCellType() == CellType.NUMERIC
 						|| customerSheet.getRow(i).getCell(1).toString() == ""
@@ -221,15 +229,14 @@ public class WorksheetMain {
 					System.out.println("Removing records which does not have id mapping/Email");
 					deleteRow = deletedCustomerSheet.createRow(insertRow++);
 					
-				      CellCopyPolicy policy = new CellCopyPolicy();
-				      policy.setCopyCellStyle(false);
-				      
-				      deleteRow.copyRowFrom(customerSheet.getRow(i), policy);
+					deleteRow.createCell(0).setCellValue(customerSheet.getRow(i).getCell(1).toString());
+					deleteRow.createCell(1).setCellValue(customerSheet.getRow(i).getCell(3).toString());
+					
 				      
 				      if (customerSheet.getRow(i).getCell(3) == null || customerSheet.getRow(i).getCell(3).getCellType() == CellType.BLANK)
-							deleteRow.createCell(11).setCellValue("Reason for deletion : No Email Id Present for this record");
+							deleteRow.createCell(2).setCellValue("No Email Id Present for this record");
 						else
-							deleteRow.createCell(11).setCellValue("Reason for deletion : No Cutomer Id mapping in Export Sheet");
+							deleteRow.createCell(2).setCellValue("No Cutomer Id mapping in Export Sheet");
 				
 					customerSheet.shiftRows(customerSheet.getRow(i).getRowNum() + 1, customerSheet.getLastRowNum() + 1, -1);
 					i--;
@@ -280,7 +287,7 @@ public class WorksheetMain {
 	
 	
 	
-	private static void customerToCsv(XSSFSheet customerSheet) throws Exception
+	private static void customerToImpex(XSSFSheet customerSheet, int customerCellCount, int customerHeader) throws Exception
 	{
 
 
@@ -288,17 +295,18 @@ public class WorksheetMain {
 		CSVPrinter csvPrinter = null; 
 		csvPrinter = new CSVPrinter(new OutputStreamWriter(sampleCsv), CSVFormat.DEFAULT.withDelimiter(';').withTrim());
 		
-		for(int i=0;i<=9;i++)
+		for(int i=0;i<=customerCellCount;i++)
 		{
-			if(customerSheet.getRow(2).getCell(i)!=null)
-			csvPrinter.print(customerSheet.getRow(2).getCell(i).toString());
+			if(customerSheet.getRow(customerHeader).getCell(i)!=null)
+			csvPrinter.print(customerSheet.getRow(customerHeader).getCell(i).toString());
 		}
+			csvPrinter.print(null);
 		
-        for(int i=4;i<=customerSheet.getLastRowNum();i++) {                
+        for(int i=customerValueRow;i<=customerSheet.getLastRowNum();i++) {                
         	
         		csvPrinter.println();
         		//csvPrinter.print(null);
-        	for (int j =0;j<=9;j++) {
+        	for (int j =0;j<=customerCellCount;j++) {
             	
         		if(customerSheet.getRow(i).getCell(j)!=null)
         		{
@@ -310,7 +318,8 @@ public class WorksheetMain {
         		else
         			csvPrinter.print(null);
             	
-            }                   
+        	}
+        		csvPrinter.print(null);
            
         }   
 		
@@ -319,37 +328,47 @@ public class WorksheetMain {
 	}
 	
 	
-	private static void addressToCsv(XSSFSheet addressSheet) throws Exception
+	private static void addressToImpex(XSSFSheet addressSheet, int addressCellCount, int addressHeader) throws Exception
 	{
 
 
 		FileOutputStream sampleCsv = new FileOutputStream(new File(".\\UpdatedFiles\\AddressImpex.impex"));
 		CSVPrinter csvPrinter = null; 
-		csvPrinter = new CSVPrinter(new OutputStreamWriter(sampleCsv), CSVFormat.DEFAULT.withDelimiter(';').withTrim());
+		csvPrinter = new CSVPrinter(new OutputStreamWriter(sampleCsv), CSVFormat.DEFAULT.withDelimiter(';').withTrim().withEscape('\\').withQuoteMode(QuoteMode.NONE));
 		
-		for(int i=0;i<=13;i++)
+		for(int i=0;i<=addressCellCount;i++)
 		{
-			if(addressSheet.getRow(2).getCell(i)!=null)
-			csvPrinter.print(addressSheet.getRow(2).getCell(i).toString());
+			if(addressSheet.getRow(addressHeader).getCell(i)!=null)
+			csvPrinter.print(addressSheet.getRow(addressHeader).getCell(i).toString());
 		}
+			csvPrinter.print(null);
 		
-        for(int i=4;i<=addressSheet.getLastRowNum();i++) {                
+        for(int i=addressValueRow;i<=addressSheet.getLastRowNum();i++) {                
         	
         		csvPrinter.println();
         		//csvPrinter.print(null);
-        	for (int j =0;j<=13;j++) {
+        	for (int j =0;j<=addressCellCount;j++) {
             	
-        		if(addressSheet.getRow(i).getCell(j)!=null)
+        		if(null != addressSheet.getRow(i).getCell(j) && addressSheet.getRow(i).getCell(j).toString()!="")
         		{
-        			if(addressSheet.getRow(i).getCell(j).getCellType()==CellType.NUMERIC)
+        			if(j==5 || j==6 || j==8)
+        			{
+        				String value = addressSheet.getRow(i).getCell(j).toString().replaceAll("\"","'");
+        				value = "\"" + value + "\"";
+        				csvPrinter.print(value);
+        			}
+        			else if(addressSheet.getRow(i).getCell(j).getCellType()==CellType.NUMERIC)
         				csvPrinter.print(addressSheet.getRow(i).getCell(j).toString().split("\\.")[0]);
         			else
         				csvPrinter.print(addressSheet.getRow(i).getCell(j).toString());
         		}
         		else
+        		{
         			csvPrinter.print(null);
+        		}
             	
-            }                   
+        	} 
+        		csvPrinter.print(null);
            
         }   
 		
