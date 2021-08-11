@@ -33,13 +33,15 @@ public class WorksheetMain {
 
 	public static void main(String[] args) throws Exception {
 
+		//String sample = "26 av\\; mal\\; de lattre de tassigny";
+		//System.out.println(sample.replaceAll("\\\\", ""));
 
 		Cell cell = null;
 		String customerId = "";
 		String uid = "";
 		String tempUid = "";
 		String customerEmail;
-		int customerCellCount = 9, addressCellCount = 13;
+		int customerCellCount = 10, addressCellCount = 14;
 		int customerHeader = 2, addressHeader = 2;
 		
 		XSSFWorkbook workbookCustomer = null;
@@ -78,6 +80,8 @@ public class WorksheetMain {
 		
 		
 		//XSSFRow deleteRow;
+		
+		customerSheet = deleteGuestCustomer(customerSheet);
 		
 		for (int i = customerValueRow; i <= customerSheet.getLastRowNum(); i++) {
 
@@ -179,6 +183,25 @@ public class WorksheetMain {
 		
 		
 
+	}
+	
+	
+	//delete Guest from Customer
+	private static XSSFSheet deleteGuestCustomer(XSSFSheet customerSheet) {
+		for (int i = customerValueRow; i <= customerSheet.getLastRowNum(); i++) {
+			try {
+					if(customerSheet.getRow(i).getCell(7).toString().equalsIgnoreCase("Guest"))
+					{
+					customerSheet.shiftRows(customerSheet.getRow(i).getRowNum() + 1, customerSheet.getLastRowNum() + 1, -1);
+					i--;
+					}
+				}
+			catch (NullPointerException e) {
+				System.out.println("Null Pointer at row" + i);
+				e.printStackTrace();
+				}
+			} 
+		return customerSheet;
 	}
 
 	private static XSSFSheet deleteAddressRow(XSSFSheet addressSheet, XSSFSheet deletedAddressSheet) {
@@ -334,7 +357,7 @@ public class WorksheetMain {
 
 		FileOutputStream sampleCsv = new FileOutputStream(new File(".\\UpdatedFiles\\AddressImpex.impex"));
 		CSVPrinter csvPrinter = null; 
-		csvPrinter = new CSVPrinter(new OutputStreamWriter(sampleCsv), CSVFormat.DEFAULT.withDelimiter(';').withTrim().withEscape('\\').withQuoteMode(QuoteMode.NONE));
+		csvPrinter = new CSVPrinter(new OutputStreamWriter(sampleCsv), CSVFormat.DEFAULT.withDelimiter(';').withTrim().withQuoteMode(QuoteMode.MINIMAL));
 		
 		for(int i=0;i<=addressCellCount;i++)
 		{
@@ -351,13 +374,14 @@ public class WorksheetMain {
             	
         		if(null != addressSheet.getRow(i).getCell(j) && addressSheet.getRow(i).getCell(j).toString()!="")
         		{
-        			if(j==5 || j==6 || j==8)
+        			/*if(j==5 || j==6 || j==8)
         			{
         				String value = addressSheet.getRow(i).getCell(j).toString().replaceAll("\"","'");
+        				value = value.replaceAll("\\\\", "");
         				value = "\"" + value + "\"";
         				csvPrinter.print(value);
-        			}
-        			else if(addressSheet.getRow(i).getCell(j).getCellType()==CellType.NUMERIC)
+        			}*/
+        			if(addressSheet.getRow(i).getCell(j).getCellType()==CellType.NUMERIC)
         				csvPrinter.print(addressSheet.getRow(i).getCell(j).toString().split("\\.")[0]);
         			else
         				csvPrinter.print(addressSheet.getRow(i).getCell(j).toString());
