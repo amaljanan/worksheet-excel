@@ -662,11 +662,17 @@ public class Main {
         XSSFSheet addressSheet = addressWorkbook.getSheet("Address");
 
         Row headerRow = addressSheet.getRow(2);
-        Iterator<Cell> cellIterator = headerRow.cellIterator();
-        while (cellIterator.hasNext()) {
-          Cell cell = cellIterator.next();
+       // Iterator<Cell> cellIterator = headerRow.cellIterator();
+        for(int  i=0;i<=addressSheetColumnCount;i++) {
+          Cell cell = headerRow.getCell(i);
           if (null != cell && !cell.toString().equalsIgnoreCase("")) {
-            csvPrinter.print(cell.toString());
+
+            if(i==1)
+            {
+              csvPrinter.print("&addrId");
+            }
+            else
+            {  csvPrinter.print(cell.toString());}
           }
         }
         csvPrinter.print(null);
