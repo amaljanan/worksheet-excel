@@ -702,7 +702,7 @@ public class Main {
             deletedRow
                     .createCell(0)
                     .setCellValue(
-                            row.getCell(addressSheetCustomerUidIndex).getNumericCellValue());
+                            row.getCell(addressSheetCustomerUidIndex).toString());
 
             System.out.println(
                     "Removed Invalid Address with Customer id = "
