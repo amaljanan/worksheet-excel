@@ -50,14 +50,13 @@ public class Main {
 
       XSSFWorkbook duplicateEntriesWorkBook = new XSSFWorkbook();
 
-
       countDuplicateEnties(customerWorkbook, duplicateEntriesWorkBook);
 
       mappingCustomerWorkbook(customerWorkbook, list);
 
       mappingAddressWorkbook(customerWorkbook, addressWorkbook, isEnviornmentUAT);
 
-     // cleaningUpWorkBooks(customerWorkbook, addressWorkbook);
+      // cleaningUpWorkBooks(customerWorkbook, addressWorkbook);
 
       exportingFinalCustomerWorkbook(customerWorkbook);
 
@@ -99,7 +98,7 @@ public class Main {
     FileInputStream addressFileInputStream =
             new FileInputStream("./Source Folder/" + addressSheetName);
     // addressFileInputStream.close();
-      return new XSSFWorkbook(addressFileInputStream );
+    return new XSSFWorkbook(addressFileInputStream);
   }
 
   private static List<CSVRecord> importExportCSVFile(Scanner scanner) throws IOException {
@@ -112,7 +111,6 @@ public class Main {
     // exportCSVParser.close();
     return exportCSVParser.getRecords();
   }
-
 
   private static void countDuplicateEnties(
           XSSFWorkbook customerWorkbook, XSSFWorkbook duplicateEntriesWorkBook) throws IOException {
@@ -297,126 +295,6 @@ public class Main {
     }
   }
 
-  private static void cleaningUpWorkBooks(
-          XSSFWorkbook customerWorkbook, XSSFWorkbook addressWorkbook) throws IOException {
-
-    XSSFWorkbook deletedEntriesWorkBook = new XSSFWorkbook();
-
-   // removeInvalidEntriesFromCustomerWorkbook(customerWorkbook, deletedEntriesWorkBook, customerRow, deleteCustomerSheetRow);
-
-   // removeInvalidEntriesFromAddress(addressWorkbook, deletedEntriesWorkBook);
-
-    FileOutputStream deletedRecordsFileOutputStream =
-            new FileOutputStream("./Target Folder/DeletedRecords.xlsx");
-    deletedEntriesWorkBook.write(deletedRecordsFileOutputStream);
-    deletedRecordsFileOutputStream.close();
-  }
-
-  private static void removeInvalidEntriesFromCustomerWorkbook(
-          XSSFWorkbook customerWorkbook, XSSFWorkbook deletedEntriesWorkBook) {
-
-    XSSFSheet deletedCustomerSheet = deletedEntriesWorkBook.createSheet("Deleted Customers");
-
-    int deleteSheetRowNumber = 0;
-
-    XSSFRow deletedCustomerHeaderRow = deletedCustomerSheet.createRow(deleteSheetRowNumber);
-
-    deletedCustomerHeaderRow.createCell(0).setCellValue("Uid");
-    deletedCustomerHeaderRow.createCell(1).setCellValue("Email");
-    deletedCustomerHeaderRow.createCell(3).setCellValue("Reason");
-
-    //deleteSheetRowNumber=deletedCustomerSheet.getLastRowNum()+2;
-
-    XSSFSheet customerSheet = customerWorkbook.getSheet("Customer");
-
-   for (int j = 0; j <= customerSheet.getLastRowNum(); j++) {
-
-      if (null != customerSheet.getRow(j).getCell(customerSheetUidIndex)
-             && (customerSheet.getRow(j).getCell(customerSheetUidIndex).getCellType()
-              == CellType.NUMERIC
-              || customerSheet.getRow(j).getCell(customerSheetUidIndex).toString().equals("")
-              || customerSheet.getRow(j).getCell(customerSheetUidIndex).getCellType()
-              == CellType.BLANK)) {
-
-        XSSFRow deletedRow = deletedCustomerSheet.createRow(deleteSheetRowNumber++);
-
-        deletedRow
-                .createCell(0)
-                .setCellValue(
-                        customerSheet.getRow(j).getCell(customerSheetUidIndex).getNumericCellValue());
-
-        if (null != customerSheet.getRow(j).getCell(customerSheetEmailIndex)) {
-          deletedRow
-                  .createCell(1)
-                  .setCellValue(customerSheet.getRow(j).getCell(customerSheetEmailIndex).toString());
-        }
-
-        System.out.println(
-                "Removed Invalid Entry with Customer id = " + customerSheet.getRow(j).getCell(1));
-        if (customerSheet.getRow(j).getCell(customerSheetEmailIndex) == null
-                || customerSheet.getRow(j).getCell(customerSheetEmailIndex).getCellType()
-                == CellType.BLANK)
-          deletedRow
-                  .createCell(3)
-                  .setCellValue("Reason for deletion : No Email Id Present for this record");
-        else
-          deletedRow
-                  .createCell(3)
-                  .setCellValue("Reason for deletion : No Customer Id mapping in Export Sheet");
-
-        customerSheet.shiftRows(
-                customerSheet.getRow(j).getRowNum() + 1, customerSheet.getLastRowNum() + 1, -1);
-        j--;
-      }
-    }
-  }
-
-  private static void removeInvalidEntriesFromAddress(
-          XSSFWorkbook addressWorkbook, XSSFWorkbook deletedEntriesWorkBook) {
-    XSSFSheet addressSheet = addressWorkbook.getSheet("Address");
-
-    XSSFSheet deletedAddressSheet = deletedEntriesWorkBook.createSheet("Deleted Address");
-
-    int deleteSheetRowNumber = 0;
-
-    XSSFRow headerRow2 = deletedAddressSheet.createRow(deleteSheetRowNumber);
-
-    headerRow2.createCell(0).setCellValue("Customer uid ");
-    headerRow2.createCell(2).setCellValue("Reason");
-
-    deleteSheetRowNumber++;
-
-    for (int j = 0; j <= addressSheet.getLastRowNum(); j++) {
-
-      if (null == addressSheet.getRow(j).getCell(addressSheetCustomerUidIndex)
-              || addressSheet.getRow(j).getCell(addressSheetCustomerUidIndex).getCellType()
-              == CellType.NUMERIC) {
-
-        XSSFRow deletedRow = deletedAddressSheet.createRow(deleteSheetRowNumber++);
-
-        deletedRow
-                .createCell(0)
-                .setCellValue(
-                        addressSheet.getRow(j).getCell(addressSheetCustomerUidIndex).getNumericCellValue());
-
-        System.out.println(
-                "Removed Invalid Address with Customer id = "
-                        + addressSheet.getRow(j).getCell(addressSheetCustomerUidIndex));
-
-        if (null == addressSheet.getRow(j).getCell(addressSheetCustomerUidIndex))
-          deletedRow.createCell(2).setCellValue("Reason for deletion: Customer Id is not present ");
-        else
-          deletedRow
-                  .createCell(2)
-                  .setCellValue("Reason for deletion : No Customer Id mapping in Export Sheet");
-
-        addressSheet.shiftRows(
-                addressSheet.getRow(j).getRowNum() + 1, addressSheet.getLastRowNum() + 1, -1);
-        j--;
-      }
-    }
-  }
-
   private static void exportingFinalAddressWorkbook(XSSFWorkbook addressWorkbook)
           throws IOException {
 
@@ -436,7 +314,6 @@ public class Main {
 
   private static void createCustomerImpexFile(XSSFWorkbook customerWorkbook) {
     int deleteSheetRowNumber = 0;
-
 
     XSSFSheet deletedCustomerSheet = deletedEntriesWorkBook.createSheet("Deleted Customers");
 
@@ -474,9 +351,7 @@ public class Main {
           if ((null != row.getCell(customerSheetUidIndex)
                   || !(row.getCell(customerSheetUidIndex).toString().equals(""))
                   || !(row.getCell(customerSheetUidIndex).getCellType() == CellType.BLANK))
-                  && row.getCell(customerSheetUidIndex).getCellType()
-                  != CellType.NUMERIC )
-          {
+                  && row.getCell(customerSheetUidIndex).getCellType() != CellType.NUMERIC) {
             for (int j = 0; j <= customerSheetColumnCount; j++) {
               if (null != row.getCell(j)) {
                 String value = row.getCell(j).toString();
@@ -488,18 +363,12 @@ public class Main {
             }
             csvPrinter.print(null);
             csvPrinter.println();
-        }
-          else
-          {
-
-
-
+          } else {
             XSSFRow deletedRow = deletedCustomerSheet.createRow(deleteSheetRowNumber++);
 
             deletedRow
                     .createCell(0)
-                    .setCellValue(
-                            row.getCell(customerSheetUidIndex).getNumericCellValue());
+                    .setCellValue(row.getCell(customerSheetUidIndex).getNumericCellValue());
 
             if (null != row.getCell(customerSheetEmailIndex)) {
               deletedRow
@@ -507,11 +376,9 @@ public class Main {
                       .setCellValue(row.getCell(customerSheetEmailIndex).toString());
             }
 
-            System.out.println(
-                    "Removed Invalid Entry with Customer id = " + row.getCell(1));
+            System.out.println("Removed Invalid Entry with Customer id = " + row.getCell(1));
             if (row.getCell(customerSheetEmailIndex) == null
-                    || row.getCell(customerSheetEmailIndex).getCellType()
-                    == CellType.BLANK)
+                    || row.getCell(customerSheetEmailIndex).getCellType() == CellType.BLANK)
               deletedRow
                       .createCell(3)
                       .setCellValue("Reason for deletion : No Email Id Present for this record");
@@ -519,17 +386,8 @@ public class Main {
               deletedRow
                       .createCell(3)
                       .setCellValue("Reason for deletion : No Customer Id mapping in Export Sheet");
-/*
-            FileOutputStream deletedRecordsFileOutputStream =
-                    new FileOutputStream("./Target Folder/DeletedRecords.xlsx");
-            deletedEntriesWorkBook.write(deletedRecordsFileOutputStream);
-            deletedRecordsFileOutputStream.close();*/
-
-             // cleaningUpWorkBooks(customerWorkbook,null);
           }
-
         }
-
       }
 
     } catch (Exception e) {
@@ -560,7 +418,6 @@ public class Main {
 
     deleteSheetRowNumber++;
 
-
     CSVPrinter csvPrinter = null;
     try {
 
@@ -573,12 +430,12 @@ public class Main {
         XSSFSheet addressSheet = addressWorkbook.getSheet("Address");
 
         Row headerRow = addressSheet.getRow(2);
-       // Iterator<Cell> cellIterator = headerRow.cellIterator();
-        for(int  i=0;i<=addressSheetColumnCount;i++) {
+        // Iterator<Cell> cellIterator = headerRow.cellIterator();
+        for (int i = 0; i <= addressSheetColumnCount; i++) {
           Cell cell = headerRow.getCell(i);
           if (null != cell && !cell.toString().equalsIgnoreCase("")) {
 
-             csvPrinter.print(cell.toString());
+            csvPrinter.print(cell.toString());
           }
         }
         csvPrinter.print(null);
@@ -586,46 +443,46 @@ public class Main {
         for (int i = 4; i <= addressSheet.getLastRowNum(); i++) {
           Row row = addressSheet.getRow(i);
           if (null != row.getCell(addressSheetCustomerUidIndex)
-                  && (row.getCell(addressSheetCustomerUidIndex).getCellType() != CellType.NUMERIC)
-                  && (!row.getCell(addressSheetCustomerUidIndex).toString().equals("")))
-          {
-            for (int j = 0; j <= addressSheetColumnCount; j++) {
-              if (null != row.getCell(j) && !row.getCell(j).toString().equalsIgnoreCase("")) {
-                String value = row.getCell(j).toString();
-                if (row.getCell(j).getCellType() == CellType.NUMERIC && value.contains(".")) {
-                  value = value.split("\\.")[0];
-                }
-                csvPrinter.print(value);
-              } else csvPrinter.print(null);
-            }
-          csvPrinter.print(null);
-          csvPrinter.println();
-          }
-          else
-          {
-            XSSFRow deletedRow = deletedAddressSheet.createRow(deleteSheetRowNumber++);
+                  && (!row.getCell(addressSheetCustomerUidIndex).toString().equals(""))
+                  && row.getCell(addressSheetCustomerUidIndex).getCellType() != CellType.BLANK) {
 
-            deletedRow
-                    .createCell(0)
-                    .setCellValue(
-                            row.getCell(addressSheetCustomerUidIndex).toString());
+            if ((row.getCell(addressSheetCustomerUidIndex).getCellType() != CellType.NUMERIC)) {
+              for (int j = 0; j <= addressSheetColumnCount; j++) {
+                if (null != row.getCell(j) && !row.getCell(j).toString().equalsIgnoreCase("")) {
+                  String value = row.getCell(j).toString();
+                  if (row.getCell(j).getCellType() == CellType.NUMERIC && value.contains(".")) {
+                    value = value.split("\\.")[0];
+                  }
+                  csvPrinter.print(value);
+                } else csvPrinter.print(null);
+              }
+              csvPrinter.print(null);
+              csvPrinter.println();
+            } else {
+              XSSFRow deletedRow = deletedAddressSheet.createRow(deleteSheetRowNumber++);
 
-            System.out.println(
-                    "Removed Invalid Address with Customer id = "
-                            + row.getCell(addressSheetCustomerUidIndex));
-
-            if (null == row.getCell(addressSheetCustomerUidIndex))
-              deletedRow.createCell(2).setCellValue("Reason for deletion: Customer Id is not present ");
-            else
               deletedRow
-                      .createCell(2)
-                      .setCellValue("Reason for deletion : No Customer Id mapping in Export Sheet");
+                      .createCell(0)
+                      .setCellValue(row.getCell(addressSheetCustomerUidIndex).toString());
 
-            FileOutputStream deletedRecordsFileOutputStream =
-                    new FileOutputStream("./Target Folder/DeletedRecords.xlsx");
-            deletedEntriesWorkBook.write(deletedRecordsFileOutputStream);
-            deletedRecordsFileOutputStream.close();
+              System.out.println(
+                      "Removed Invalid Address with Customer id = "
+                              + row.getCell(addressSheetCustomerUidIndex));
 
+              if (null == row.getCell(addressSheetCustomerUidIndex))
+                deletedRow
+                        .createCell(2)
+                        .setCellValue("Reason for deletion: Customer Id is not present ");
+              else
+                deletedRow
+                        .createCell(2)
+                        .setCellValue("Reason for deletion : No Customer Id mapping in Export Sheet");
+
+              FileOutputStream deletedRecordsFileOutputStream =
+                      new FileOutputStream("./Target Folder/DeletedRecords.xlsx");
+              deletedEntriesWorkBook.write(deletedRecordsFileOutputStream);
+              deletedRecordsFileOutputStream.close();
+            }
           }
         }
       }
