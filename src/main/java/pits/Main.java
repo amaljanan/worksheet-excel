@@ -13,13 +13,13 @@ import java.util.*;
 
 public class Main {
 
-  private static final int customerSheetColumnCount = 8;
+  private static final int customerSheetColumnCount = 9;
   private static final int customerSheetUidIndex = 1;
   private static final int customerSheetEmailIndex = 4;
-  private static final int customerSheetTypeCodeIndex = 7;
+  private static final int customerSheetTypeCodeIndex = 8;
 
-  private static final int addressSheetColumnCount = 15;
-  private static final int addressSheetCustomerUidIndex = 3;
+  private static final int addressSheetColumnCount = 14;
+  private static final int addressSheetCustomerUidIndex = 2;
 
   private static XSSFWorkbook deletedEntriesWorkBook = new XSSFWorkbook();
 
@@ -30,11 +30,9 @@ public class Main {
       Scanner scanner = new Scanner(System.in);
       boolean isEnviornmentUAT = true;
 
-      XSSFWorkbook finalAddressWorkBook = new XSSFWorkbook();
-
       XSSFWorkbook customerWorkbook = importCustomerWorkBook(scanner);
 
-      XSSFWorkbook addressWorkbook = importAddressWorkBook(scanner,finalAddressWorkBook);
+      XSSFWorkbook addressWorkbook = importAddressWorkBook(scanner);
 
       List<CSVRecord> list = importExportCSVFile(scanner);
 
@@ -94,101 +92,14 @@ public class Main {
     return new XSSFWorkbook(customerFileInputStream);
   }
 
-  private static XSSFWorkbook importAddressWorkBook(Scanner scanner, XSSFWorkbook finalAddressWorkBook) throws IOException {
+  private static XSSFWorkbook importAddressWorkBook(Scanner scanner) throws IOException {
     System.out.println("Enter Address Sheet name with Extension : ");
     String addressSheetName = scanner.nextLine();
 
     FileInputStream addressFileInputStream =
             new FileInputStream("./Source Folder/" + addressSheetName);
     // addressFileInputStream.close();
-    XSSFWorkbook addressWorkbook = new XSSFWorkbook(addressFileInputStream);
-    XSSFSheet addressSheet = addressWorkbook.getSheet("Address");
-
-    XSSFSheet finalAddressSheet = finalAddressWorkBook.createSheet("Address");
-    for(int i=0;i<=addressSheet.getLastRowNum(); i++)
-    {
-      Row row = finalAddressSheet.createRow(i);
-      for(int j=0;j<=addressSheetColumnCount;j++)
-      {
-
-    if(null != addressSheet.getRow(i).getCell(j))
-    {
-      CellType originCellType = addressSheet.getRow(i).getCell(j).getCellType();
-        if(j>=1)
-        {
-          if(j==1) {
-            switch(originCellType){
-              case BLANK:
-                row.createCell(j).setCellValue("");
-                row.createCell(j+1).setCellValue("");
-                break;
-
-              case BOOLEAN:
-                row.createCell(j).setCellValue(addressSheet.getRow(i).getCell(j).getBooleanCellValue());
-                row.createCell(j+1).setCellValue(addressSheet.getRow(i).getCell(j).getBooleanCellValue());
-                break;
-
-              case ERROR:
-                row.createCell(j).setCellErrorValue(addressSheet.getRow(i).getCell(j).getErrorCellValue());
-                row.createCell(j+1).setCellValue(addressSheet.getRow(i).getCell(j).getErrorCellValue());
-                break;
-
-              case NUMERIC:
-                row.createCell(j).setCellValue(addressSheet.getRow(i).getCell(j).getNumericCellValue());
-                row.createCell(j+1).setCellValue(addressSheet.getRow(i).getCell(j).getNumericCellValue());
-                break;
-
-              case STRING:
-                row.createCell(j).setCellValue(addressSheet.getRow(i).getCell(j).getStringCellValue());
-                row.createCell(j+1).setCellValue(addressSheet.getRow(i).getCell(j).getStringCellValue());
-                break;
-              default:
-                row.createCell(j).setCellFormula(addressSheet.getRow(i).getCell(j).getCellFormula());
-                row.createCell(j+1).setCellValue(addressSheet.getRow(i).getCell(j).getCellFormula());
-            }
-            //row.createCell(j).setCellValue(addressSheet.getRow(i).getCell(j).getNumericCellValue());
-
-          }
-          else
-          {
-            switch(originCellType){
-              case BLANK:
-                row.createCell(j+1).setCellValue("");
-                break;
-
-              case BOOLEAN:
-                row.createCell(j+1).setCellValue(addressSheet.getRow(i).getCell(j).getBooleanCellValue());
-                break;
-
-              case ERROR:
-                row.createCell(j+1).setCellValue(addressSheet.getRow(i).getCell(j).getErrorCellValue());
-                break;
-
-              case NUMERIC:
-                row.createCell(j+1).setCellValue(addressSheet.getRow(i).getCell(j).getNumericCellValue());
-                break;
-
-              case STRING:
-                row.createCell(j+1).setCellValue(addressSheet.getRow(i).getCell(j).getStringCellValue());
-                break;
-              default:
-                row.createCell(j+1).setCellValue(addressSheet.getRow(i).getCell(j).getCellFormula());
-            }
-          }
-        }
-        else
-        {
-          row.createCell(j).setCellValue(addressSheet.getRow(i).getCell(j).toString());
-        }
-      }
-      }
-    }
-    /*for(int i=4;i<finalAddressSheet.getLastRowNum();i++)
-    {
-      System.out.println(addressSheet.getRow(i).getCell(2).getCellType());
-    }
-*/
-    return finalAddressWorkBook;
+      return new XSSFWorkbook(addressFileInputStream );
   }
 
   private static List<CSVRecord> importExportCSVFile(Scanner scanner) throws IOException {
@@ -667,12 +578,7 @@ public class Main {
           Cell cell = headerRow.getCell(i);
           if (null != cell && !cell.toString().equalsIgnoreCase("")) {
 
-            if(i==1)
-            {
-              csvPrinter.print("&addrId");
-            }
-            else
-            {  csvPrinter.print(cell.toString());}
+             csvPrinter.print(cell.toString());
           }
         }
         csvPrinter.print(null);
@@ -681,7 +587,7 @@ public class Main {
           Row row = addressSheet.getRow(i);
           if (null != row.getCell(addressSheetCustomerUidIndex)
                   && (row.getCell(addressSheetCustomerUidIndex).getCellType() != CellType.NUMERIC)
-                  && (row.getCell(addressSheetCustomerUidIndex).toString() != ""))
+                  && (!row.getCell(addressSheetCustomerUidIndex).toString().equals("")))
           {
             for (int j = 0; j <= addressSheetColumnCount; j++) {
               if (null != row.getCell(j) && !row.getCell(j).toString().equalsIgnoreCase("")) {
